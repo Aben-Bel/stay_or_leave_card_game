@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game</title>
+    <style>
+        /* General Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        :root {
+            --color-primary: #2563eb;
+            --color-primary-dark: #1d4ed8;
+            --color-primary-light: #3b82f6;
+            --color-success: #10b981;
+            --color-success-dark: #059669;
+            --color-danger: #ef4444;
+            --color-danger-dark: #dc2626;
+            --color-warning: #f59e0b;
+            --color-background: #f3f4f6;
+            --color-card: #ffffff;
+            --color-text: #1f2937;
+            --color-text-secondary: #4b5563;
+            --color-border: #e5e7eb;
+            --color-inactive: #9ca3af;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-sm: 0.25rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --transition: all 0.2s ease;
+            --font-size-xs: 0.75rem;
+            --font-size-sm: 0.875rem;
+            --font-size-md: 1rem;
+            --font-size-lg: 1.125rem;
+            --font-size-xl: 1.25rem;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text);
+            padding: 0;
+            margin: 0;
+            line-height: 1.5;
+            font-size: var(--font-size-md);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            margin: 0;
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: var(--font-size-md);
+            transition: var(--transition);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            width: 100%;
+            font-size: var(--font-size-md);
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Setup Screen */
+        #setup-screen {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--color-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .setup-title {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .setup-input {
+            margin-bottom: 1.5rem;
+        }
+
+        .setup-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .error-message {
+            color: var(--color-danger);
+            font-size: var(--font-size-sm);
+            margin-top: 0.25rem;
+        }
+
+        #player-names-container {
+            margin-bottom: 1.5rem;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .primary-button {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .primary-button:hover:enabled {
+            background-color: var(--color-primary-dark);
+        }
+
+        .success-button {
+            background-color: var(--color-success);
+            color: white;
+        }
+
+        .success-button:hover:enabled {
+            background-color: var(--color-success-dark);
+        }
+
+        .danger-button {
+            background-color: var(--color-danger);
+            color: white;
+        }
+
+        .danger-button:hover:enabled {
+            background-color: var(--color-danger-dark);
+        }
+
+        #start-game-btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: var(--font-size-lg);
+            background-color: var(--color-success);
+        }
+
+        #start-game-btn:hover:enabled {
+            background-color: var(--color-success-dark);
+        }
+
+        /* Game Screen */
+        #game-screen {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background-color: var(--color-background);
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: 1fr;
+            height: 100%;
+            gap: 1px;
+            background-color: var(--color-border);
+        }
+
+        .game-panel {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--color-card);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--color-card);
+            gap: 0.5rem;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: var(--font-size-lg);
+        }
+
+        .panel-content {
+            padding: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            height: 50%;
+        }
+
+        .panel-section:first-child {
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .info-badge {
+            padding: 0.5rem 0.75rem;
+            background-color: #f3f4f6;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+            font-weight: 500;
+        }
+
+        .current-round {
+            padding: 0.25rem 0.5rem;
+            background-color: #f3f4f6;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+        }
+
+        /* Left Panel - Card Display */
+        .game-panel-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 1.5rem;
+        }
+
+        .current-card {
+            width: 220px;
+            height: 308px;
+            border-radius: var(--radius-lg);
+            background-color: white;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            transition: var(--transition);
+        }
+
+        .current-card:empty {
+            background-color: #f9fafb;
+            border: 2px dashed #d1d5db;
+        }
+
+        .suit {
+            font-size: 4rem;
+        }
+
+        .red {
+            color: var(--color-danger);
+        }
+
+        .black {
+            color: var(--color-text);
+        }
+
+        .card-value {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-size: 1.75rem;
+            font-weight: bold;
+        }
+
+        .card-value-bottom {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            font-size: 1.75rem;
+            font-weight: bold;
+            transform: rotate(180deg);
+        }
+
+        .card-message {
+            padding: 1rem;
+            margin: 1rem;
+            background-color: #f9fafb;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: 500;
+            min-height: 80px;
+        }
+
+        .control-bar {
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .control-bar button {
+            padding: 0.75rem 2rem;
+            font-size: var(--font-size-lg);
+        }
+
+        /* Center Panel - Players */
+        .game-panel-center {
+            overflow-y: auto;
+        }
+
+        .players-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .player-card {
+            background-color: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: 1rem;
+            border-left: 4px solid transparent;
+            transition: var(--transition);
+        }
+
+        .player-card.active {
+            border-left-color: var(--color-success);
+        }
+
+        .player-card.inactive {
+            background-color: #f9fafb;
+            opacity: 0.8;
+            border-left-color: var(--color-inactive);
+        }
+
+        .player-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .player-name {
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-score {
+            margin-bottom: 0.75rem;
+            font-size: var(--font-size-md);
+        }
+
+        .player-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+
+        .status-inactive {
+            background-color: rgba(156, 163, 175, 0.1);
+            color: var(--color-inactive);
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .player-actions button {
+            flex: 1;
+            font-size: var(--font-size-sm);
+            padding: 0.5rem 0;
+        }
+
+        /* Right Panel - Scores and History */
+        .game-panel-right {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scores-table th, .scores-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .scores-table th {
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        .scores-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .highest-score {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+
+        .history-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        .history-card {
+            width: 60px;
+            height: 84px;
+            border-radius: var(--radius-sm);
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .history-card .card-value {
+            font-size: 0.75rem;
+            top: 0.35rem;
+            left: 0.35rem;
+        }
+
+        .history-card .card-value-bottom {
+            font-size: 0.75rem;
+            bottom: 0.35rem;
+            right: 0.35rem;
+        }
+
+        .history-card .suit {
+            font-size: 1.25rem;
+        }
+
+        /* Results Screen */
+        #results-screen {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--color-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .results-title {
+            margin-bottom: 1.5rem;
+            font-size: 1.875rem;
+        }
+
+        .results-list {
+            margin-bottom: 1.5rem;
+        }
+
+        .result-item {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background-color: #f9fafb;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item.winner {
+            background-color: var(--color-success);
+            color: white;
+        }
+
+        #winners {
+            margin: 1.5rem 0;
+            font-size: 1.5rem;
+        }
+
+        #final-lot {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: var(--radius-md);
+        }
+
+        .play-again-btn {
+            padding: 0.75rem 2rem;
+            font-size: var(--font-size-lg);
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .play-again-btn:hover {
+            background-color: var(--color-primary-dark);
+        }
+
+        /* Round summary */
+        #round-summary {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 2rem;
+            background-color: var(--color-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            z-index: 100;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .summary-title {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .summary-content {
+            margin-bottom: 1rem;
+        }
+
+        .summary-content h3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-content p {
+            margin-bottom: 0.5rem;
+        }, 199, 0.3);
+            color: #7f8c8d;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .player-actions button {
+            flex: 1;
+            padding: 6px 0;
+            font-size: 12px;
+        }
+
+        .player-actions button:nth-child(1) {
+            background-color: #2ecc71;
+        }
+
+        .player-actions button:nth-child(1):hover {
+            background-color: #27ae60;
+        }
+
+        .player-actions button:nth-child(2) {
+            background-color: #e74c3c;
+        }
+
+        .player-actions button:nth-child(2):hover {
+            background-color: #c0392b;
+        }
+
+        /* Right side - Running scores and card history */
+        .game-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            grid-row: 2 / 3;
+            grid-column: 2 / 3;
+            max-height: calc(100vh - 130px);
+        }
+
+        /* Running Scores Section */
+        .running-scores {
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            flex: 1 0 auto;
+            overflow-y: auto;
+        }
+
+        .scores-title {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scores-title h3 {
+            margin-bottom: 0;
+            font-size: 16px;
+        }
+
+        .scores-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .scores-table th, .scores-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .scores-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .scores-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .scores-table tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .highest-score {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+
+        /* Card history */
+        .card-history {
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            flex: 1 0 auto;
+            max-height: 40%;
+            overflow-y: auto;
+        }
+
+        .history-title {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .history-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-card {
+            width: 50px;
+            height: 70px;
+            border: none;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            background-color: white;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .history-card .card-value {
+            font-size: 10px;
+            top: 5px;
+            left: 5px;
+        }
+
+        .history-card .card-value-bottom {
+            font-size: 10px;
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .history-card .suit {
+            font-size: 16px;
+        }
+
+        /* Footer */
+        .game-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Results Screen */
+        #results-screen {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .results-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .results-list {
+            margin-bottom: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-item.winner {
+            background-color: #2ecc71;
+            color: white;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+        }
+
+        #winners {
+            margin: 20px 0;
+            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        #final-lot {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #34495e;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .play-again-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+        }
+
+        .draw-card-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-image: linear-gradient(to right, #3498db, #2980b9);
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+
+        .draw-card-btn:hover {
+            background-image: linear-gradient(to right, #2980b9, #2c3e50);
+        }
+
+        /* Round summary */
+        #round-summary {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            z-index: 100;
+            min-width: 350px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .summary-title {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+
+        .summary-content {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .summary-content h3 {
+            margin-bottom: 10px;
+            color: #34495e;
+        }
+
+        .summary-content p {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }, 0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .history-card .card-value {
+            font-size: 12px;
+            top: 8px;
+            left: 8px;
+        }
+
+        .history-card .card-value-bottom {
+            font-size: 12px;
+            bottom: 8px;
+            right: 8px;
+        }
+
+        .history-card .suit {
+            font-size: 20px;
+        }
+
+        /* Results Screen */
+        #results-screen {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .results-title {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 32px;
+        }
+
+        .results-list {
+            margin-bottom: 30px;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .result-item.winner {
+            background-color: #2ecc71;
+            color: white;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+        }
+
+        #winners {
+            margin: 30px 0;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        #final-lot {
+            margin-bottom: 30px;
+            font-size: 20px;
+            color: #34495e;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .play-again-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #3498db;
+        }
+
+        .draw-card-btn {
+            margin-bottom: 0;
+            padding: 12px 24px;
+            font-size: 16px;
+            background-image: linear-gradient(to right, #3498db, #2980b9);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .draw-card-btn:hover {
+            background-image: linear-gradient(to right, #2980b9, #2c3e50);
+        }
+
+        /* Round summary */
+        #round-summary {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 40px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            z-index: 100;
+            min-width: 400px;
+            animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .summary-title {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .summary-content {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .summary-content h3 {
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        .summary-content p {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <!-- Game setup form -->
+    <div id="setup-screen">
+        <h1>Card Game Setup</h1>
+        
+        <div class="setup-input">
+            <label for="num-decks">Number of Decks</label>
+            <input type="number" id="num-decks" min="1" value="3" step="1">
+            <div id="decks-error" class="error-message"></div>
+        </div>
+        
+        <div class="setup-input">
+            <label for="num-players">Number of Players</label>
+            <input type="number" id="num-players" min="2" value="3" step="1">
+            <div id="players-error" class="error-message"></div>
+        </div>
+        
+        <div id="player-names-container">
+            <!-- Player name inputs will be generated here -->
+        </div>
+        
+        <button id="start-game-btn">Start Game</button>
+    </div>
+    
+    <!-- Game screen (initially hidden) -->
+    <div id="game-screen" style="display: none;">
+        <div class="game-layout">
+            <!-- Left panel -->
+            <div class="game-panel game-panel-left">
+                <div class="panel-header">
+                    <div id="round-info" class="info-badge">Round: 1 of 5</div>
+                    <div id="deck-info" class="info-badge">Cards remaining: 0</div>
+                    <div id="lot-info" class="info-badge">Lot amount: 0</div>
+                </div>
+                
+                <div class="card-display">
+                    <div id="current-card" class="current-card">
+                        <!-- Card will be displayed here -->
+                    </div>
+                </div>
+                
+                <div id="card-message" class="card-message"></div>
+                
+                <div class="control-bar">
+                    <button id="draw-card-btn" class="primary-button">Draw Card</button>
+                </div>
+            </div>
+            
+            <!-- Center panel -->
+            <div class="game-panel game-panel-center">
+                <div class="panel-header">
+                    <h3>Players</h3>
+                </div>
+                
+                <div id="players-section" class="players-section">
+                    <!-- Player cards will be generated here -->
+                </div>
+            </div>
+            
+            <!-- Right panel -->
+            <div class="game-panel game-panel-right">
+                <div class="panel-section">
+                    <div class="panel-header">
+                        <h3>Running Scores</h3>
+                        <div id="current-round-display" class="current-round">Round 1 of 5</div>
+                    </div>
+                    <div class="panel-content">
+                        <table class="scores-table">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scores-table-body">
+                                <!-- Player scores will be generated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <div class="panel-header">
+                        <h3>Cards Drawn This Round</h3>
+                    </div>
+                    <div class="panel-content">
+                        <div id="history-cards" class="history-cards">
+                            <!-- History cards will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+            <div id="current-card" class="current-card">
+                <!-- Card will be displayed here -->
+            </div>
+            <div id="card-message" class="card-message">
+                <!-- Card action message will be displayed here -->
+            </div>
+            <div id="players-section" class="players-section">
+                <!-- Player cards will be generated here -->
+            </div>
+        </div>
+        
+        <div class="card-history">
+            <h3 class="history-title">Cards Drawn This Round</h3>
+            <div id="history-cards" class="history-cards">
+                <!-- History cards will be displayed here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Round summary (initially hidden) -->
+    <div id="round-summary" style="display: none;">
+        <h2 class="summary-title">Round X Complete</h2>
+        <div id="summary-content" class="summary-content">
+            <!-- Round summary content will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Results screen (initially hidden) -->
+    <div id="results-screen" style="display: none;">
+        <h1 class="results-title">Game Over!</h1>
+        <div id="final-scores" class="results-list">
+            <!-- Final scores will be displayed here -->
+        </div>
+        <div id="winners"></div>
+        <div id="final-lot">Final lot amount: 0</div>
+        <button id="play-again-btn" class="play-again-btn">Play Again</button>
+    </div>
+    
+    <script>
+        // Game state variables
+        let currentRound = 1;
+        let currentDeck = [];
+        let lotAmount = 0;
+        let players = [];
+        let cardsDrawn = [];
+        let eliminationCardDrawn = false;
+        let waitingForDecisions = false;
+        
+        // DOM Elements
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const roundSummary = document.getElementById('round-summary');
+        
+        const numDecksInput = document.getElementById('num-decks');
+        const numPlayersInput = document.getElementById('num-players');
+        const playerNamesContainer = document.getElementById('player-names-container');
+        const startGameBtn = document.getElementById('start-game-btn');
+        
+        const roundInfo = document.getElementById('round-info');
+        const deckInfo = document.getElementById('deck-info');
+        const lotInfo = document.getElementById('lot-info');
+        const drawCardBtn = document.getElementById('draw-card-btn');
+        
+        const currentCardDisplay = document.getElementById('current-card');
+        const cardMessage = document.getElementById('card-message');
+        const playersSection = document.getElementById('players-section');
+        const historyCards = document.getElementById('history-cards');
+        
+        const summaryTitle = document.querySelector('.summary-title');
+        const summaryContent = document.getElementById('summary-content');
+        
+        const finalScores = document.getElementById('final-scores');
+        const winners = document.getElementById('winners');
+        const finalLot = document.getElementById('final-lot');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        
+        // Event Listeners
+        numPlayersInput.addEventListener('input', generatePlayerNameInputs);
+        startGameBtn.addEventListener('click', validateAndStartGame);
+        drawCardBtn.addEventListener('click', drawCard);
+        playAgainBtn.addEventListener('click', resetGame);
+        
+        // Generate player name inputs based on number of players
+        function generatePlayerNameInputs() {
+            const numPlayers = parseInt(numPlayersInput.value);
+            
+            // Validate number of players
+            if (numPlayers < 2) {
+                document.getElementById('players-error').textContent = 'Number of players must be at least 2';
+                return;
+            } else {
+                document.getElementById('players-error').textContent = '';
+            }
+            
+            // Clear existing inputs
+            playerNamesContainer.innerHTML = '';
+            
+            // Generate new inputs
+            for (let i = 1; i <= numPlayers; i++) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'setup-input';
+                
+                const label = document.createElement('label');
+                label.setAttribute('for', `player-${i}`);
+                label.textContent = `Player ${i} Name`;
+                
+                const input = document.createElement('input');
+                input.setAttribute('type', 'text');
+                input.setAttribute('id', `player-${i}`);
+                input.setAttribute('class', 'player-name-input');
+                
+                const error = document.createElement('div');
+                error.setAttribute('id', `player-${i}-error`);
+                error.className = 'error-message';
+                
+                inputDiv.appendChild(label);
+                inputDiv.appendChild(input);
+                inputDiv.appendChild(error);
+                
+                playerNamesContainer.appendChild(inputDiv);
+            }
+        }
+        
+        // Validate inputs and start the game
+        function validateAndStartGame() {
+            let isValid = true;
+            
+            // Validate number of decks
+            const numDecks = parseInt(numDecksInput.value);
+            if (numDecks < 1 || isNaN(numDecks)) {
+                document.getElementById('decks-error').textContent = 'Number of decks must be at least 1';
+                isValid = false;
+            } else {
+                document.getElementById('decks-error').textContent = '';
+            }
+            
+            // Validate number of players
+            const numPlayers = parseInt(numPlayersInput.value);
+            if (numPlayers < 2 || isNaN(numPlayers)) {
+                document.getElementById('players-error').textContent = 'Number of players must be at least 2';
+                isValid = false;
+            } else {
+                document.getElementById('players-error').textContent = '';
+            }
+            
+            // Validate player names
+            const playerNameInputs = document.querySelectorAll('.player-name-input');
+            playerNameInputs.forEach((input, index) => {
+                if (!input.value.trim()) {
+                    document.getElementById(`player-${index + 1}-error`).textContent = 'Player name is required';
+                    isValid = false;
+                } else {
+                    document.getElementById(`player-${index + 1}-error`).textContent = '';
+                }
+            });
+            
+            if (isValid) {
+                startGame(numDecks, playerNameInputs);
+            }
+        }
+        
+        // Start the game
+        function startGame(numDecks, playerNameInputs) {
+            // Initialize players
+            players = [];
+            Array.from(playerNameInputs).forEach(input => {
+                players.push({
+                    name: input.value.trim(),
+                    score: 0,           // Running total score
+                    roundScore: 0,      // Current round score
+                    isActive: true,
+                    hasDecided: false,
+                    decision: null,
+                    isLeaving: false
+                });
+            });
+            
+            // Initialize game state
+            currentRound = 1;
+            lotAmount = 0;
+            cardsDrawn = [];
+            eliminationCardDrawn = false;
+            waitingForDecisions = false;
+            
+            // Generate and shuffle deck
+            currentDeck = shuffleDeck(generateDecks(numDecks));
+            
+            // Update UI
+            updateGameInfo();
+            renderPlayers();
+            
+            // Show game screen
+            setupScreen.style.display = 'none';
+            gameScreen.style.display = 'grid';
+        }
+        
+        // Generate decks
+        function generateDecks(numDecks) {
+            const deck = [];
+            const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+            const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            
+            for (let d = 0; d < numDecks; d++) {
+                for (let s = 0; s < suits.length; s++) {
+                    for (let v = 0; v < values.length; v++) {
+                        let numericValue;
+                        if (values[v] === 'A') {
+                            numericValue = 1;
+                        } else if (values[v] === 'J') {
+                            numericValue = 11;
+                        } else if (values[v] === 'Q') {
+                            numericValue = 12;
+                        } else if (values[v] === 'K') {
+                            numericValue = 13;
+                        } else {
+                            numericValue = parseInt(values[v]);
+                        }
+                        
+                        deck.push({
+                            suit: suits[s],
+                            value: values[v],
+                            numericValue: numericValue
+                        });
+                    }
+                }
+            }
+            
+            return deck;
+        }
+        
+        // Shuffle deck using Fisher-Yates algorithm
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+        
+        // Update game info display
+        function updateGameInfo() {
+            roundInfo.textContent = `Round: ${currentRound} of 5`;
+            deckInfo.textContent = `Cards remaining: ${currentDeck.length}`;
+            lotInfo.textContent = `Lot amount: ${lotAmount}`;
+            
+            // Update running scores table
+            updateRunningScores();
+            
+            // Update current round display in scores section
+            document.getElementById('current-round-display').textContent = `Round ${currentRound} of 5`;
+        }
+        
+        // Update running scores table
+        function updateRunningScores() {
+            const scoresTableBody = document.getElementById('scores-table-body');
+            scoresTableBody.innerHTML = '';
+            
+            // Find highest score to highlight
+            const highestScore = Math.max(...players.map(player => player.score));
+            
+            // Sort players by score (highest first)
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            
+            sortedPlayers.forEach(player => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = player.name;
+                
+                const scoreCell = document.createElement('td');
+                scoreCell.textContent = `${player.score} (+${player.roundScore})`;
+                if (player.score === highestScore && player.score > 0) {
+                    scoreCell.className = 'highest-score';
+                }
+                
+                const statusCell = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `player-status ${player.isActive ? 'status-active' : 'status-inactive'}`;
+                statusBadge.textContent = player.isActive ? 'Active' : 'Inactive';
+                statusCell.appendChild(statusBadge);
+                
+                row.appendChild(nameCell);
+                row.appendChild(scoreCell);
+                row.appendChild(statusCell);
+                
+                scoresTableBody.appendChild(row);
+            });
+        }
+        
+        // Render player cards
+        function renderPlayers() {
+            playersSection.innerHTML = '';
+            
+            players.forEach((player, index) => {
+                const playerCard = document.createElement('div');
+                playerCard.className = `player-card ${player.isActive ? 'active' : 'inactive'}`;
+                
+                const playerName = document.createElement('div');
+                playerName.className = 'player-name';
+                playerName.textContent = player.name;
+                
+                const playerScore = document.createElement('div');
+                playerScore.className = 'player-score';
+                // playerScore.textContent = `Score: ${player.score}`;
+                
+                const playerStatus = document.createElement('div');
+                playerStatus.className = 'player-status';
+                playerStatus.textContent = player.isActive ? 'Active' : 'Inactive';
+                playerStatus.classList.add(player.isActive ? 'status-active' : 'status-inactive');
+                
+                const playerActions = document.createElement('div');
+                playerActions.className = 'player-actions';
+                
+                // Decision buttons
+                const stayBtn = document.createElement('button');
+                stayBtn.textContent = 'Stay';
+                stayBtn.setAttribute('data-player', index);
+                stayBtn.addEventListener('click', () => playerDecision(index, 'stay'));
+                
+                const leaveBtn = document.createElement('button');
+                leaveBtn.textContent = 'Leave';
+                leaveBtn.setAttribute('data-player', index);
+                leaveBtn.addEventListener('click', () => playerDecision(index, 'leave'));
+                
+                // Button state handling
+                const buttonsDisabled = !player.isActive || !waitingForDecisions || player.hasDecided;
+                stayBtn.disabled = buttonsDisabled;
+                leaveBtn.disabled = buttonsDisabled;
+                
+                // If the player has decided, show which decision was made
+                if (player.isActive && player.hasDecided) {
+                    playerStatus.textContent = player.decision === 'stay' ? 'Staying' : 'Leaving';
+                }
+                
+                playerActions.appendChild(stayBtn);
+                playerActions.appendChild(leaveBtn);
+                
+                playerCard.appendChild(playerName);
+                playerCard.appendChild(playerScore);
+                playerCard.appendChild(playerStatus);
+                playerCard.appendChild(playerActions);
+                
+                playersSection.appendChild(playerCard);
+            });
+        }
+        
+        // Check if all active players have made decisions
+        function checkAllDecisionsMade() {
+            const activePlayersWithoutDecision = players.filter(player => 
+                player.isActive && !player.hasDecided
+            );
+            
+            if (activePlayersWithoutDecision.length === 0) {
+                // All active players have made decisions
+                waitingForDecisions = false;
+                
+                // Process lot distribution for players leaving
+                processLotDistribution();
+                
+                // Enable draw button
+                drawCardBtn.disabled = false;
+                
+                // Update UI
+                renderPlayers();
+                
+                // Check if we should end the round
+                if (isRoundOver()) {
+                    endRound();
+                }
+            }
+        }
+        
+        // Process lot distribution for players who chose to leave
+        function processLotDistribution() {
+            // Count players who are leaving this round
+            const leavingPlayers = players.filter(player => player.isLeaving);
+            
+            // Only distribute lot if exactly one player is leaving
+            if (leavingPlayers.length === 1) {
+                const leavingPlayer = leavingPlayers[0];
+                
+                // Add lot amount to the leaving player's round score
+                leavingPlayer.roundScore += lotAmount;
+                
+                // Update total score with current round score
+                leavingPlayer.score += leavingPlayer.roundScore;
+                
+                // Add a message about winning the lot
+                cardMessage.textContent += ` ${leavingPlayer.name} left alone and won ${lotAmount} points from the lot!`;
+                
+                // Reset lot amount to 0
+                lotAmount = 0;
+                
+                // Reset round score since it's now been added to total score
+                leavingPlayer.roundScore = 0;
+            }
+            
+            // Reset leaving status for next card
+            players.forEach(player => {
+                player.isLeaving = false;
+            });
+            
+            // Update game info to reflect new lot amount and scores
+            updateGameInfo();
+        }
+        
+        // Draw a card
+        function drawCard() {
+            if (currentDeck.length === 0) {
+                endRound();
+                return;
+            }
+            
+            // Draw a card from the deck
+            const card = currentDeck.shift();
+            cardsDrawn.push(card);
+            
+            // Display the card
+            displayCard(card);
+            
+            // Add to history
+            addToHistory(card);
+            
+            // Process card results
+            processCardResults(card);
+            
+            // Update game info
+            updateGameInfo();
+            
+            // Set waiting for decisions to true
+            waitingForDecisions = true;
+            
+            // Disable draw button
+            drawCardBtn.disabled = true;
+            
+            // Reset decision status for all players
+            players.forEach(player => {
+                player.hasDecided = false;
+            });
+            
+            // Render players to show decision buttons
+            renderPlayers();
+            
+            // Check if round should end
+            if (isRoundOver()) {
+                endRound();
+            }
+        }
+        
+        // Display the drawn card
+        function displayCard(card) {
+            const suitSymbol = getSuitSymbol(card.suit);
+            const colorClass = card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
+            
+            currentCardDisplay.innerHTML = `
+                <div class="card-value ${colorClass}">${card.value}</div>
+                <div class="suit ${colorClass}">${suitSymbol}</div>
+                <div class="card-value-bottom ${colorClass}">${card.value}</div>
+            `;
+        }
+        
+        // Add card to history
+        function addToHistory(card) {
+            const historyCard = document.createElement('div');
+            historyCard.className = 'history-card';
+            
+            const suitSymbol = getSuitSymbol(card.suit);
+            const colorClass = card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
+            
+            historyCard.innerHTML = `
+                <div class="card-value ${colorClass}">${card.value}</div>
+                <div class="suit ${colorClass}">${suitSymbol}</div>
+                <div class="card-value-bottom ${colorClass}">${card.value}</div>
+            `;
+            
+            historyCards.appendChild(historyCard);
+        }
+        
+        // Process card results
+        function processCardResults(card) {
+            if (card.value === 'K' || card.value === 'Q') {
+                processEliminationCard();
+            } else if (card.value === 'A' || card.value === 'J') {
+                processArtifactCard();
+            } else {
+                processNumberCard(card);
+            }
+        }
+        
+        // Process elimination card (K or Q)
+        function processEliminationCard() {
+            let allPlayersActive = players.every(player => player.isActive);
+            
+            if (!eliminationCardDrawn && allPlayersActive) {
+                // First elimination card with all players active
+                eliminationCardDrawn = true;
+                cardMessage.textContent = "First elimination card! No players are eliminated.";
+            } else {
+                // Eliminate all active players
+                players.forEach(player => {
+                    if (player.isActive) {
+                        player.isActive = false;
+                    }
+                });
+                cardMessage.textContent = "Elimination card! All active players are eliminated.";
+                // Update player display
+                renderPlayers();
+            }
+        }
+        
+        // Process artifact card (A or J)
+        function processArtifactCard() {
+            lotAmount += 10;
+            cardMessage.textContent = "Artifact card! 10 points added to the lot.";
+            updateGameInfo();
+        }
+        
+        // Process number card (2-10)
+        function processNumberCard(card) {
+            const activePlayerCount = players.filter(player => player.isActive).length;
+            
+            if (activePlayerCount === 0) {
+                cardMessage.textContent = "No active players. Points added to lot.";
+                lotAmount += card.numericValue;
+            } else {
+                const pointsPerPlayer = Math.floor(card.numericValue / activePlayerCount);
+                const remainder = card.numericValue % activePlayerCount;
+                
+                // Distribute points to active players
+                players.forEach(player => {
+                    if (player.isActive) {
+                        player.roundScore += pointsPerPlayer;
+                    }
+                });
+                
+                // Add remainder to lot
+                lotAmount += remainder;
+                
+                cardMessage.textContent = `Each active player gets ${pointsPerPlayer} points. ${remainder} points added to lot.`;
+                renderPlayers();
+            }
+        }
+        
+        // Handle player decision (stay or leave)
+        function playerDecision(playerIndex, decision) {
+            // Store the player's decision
+            players[playerIndex].hasDecided = true;
+            players[playerIndex].decision = decision;
+            
+            // If the player chose to leave, mark them as inactive for next card
+            if (decision === 'leave') {
+                players[playerIndex].isActive = false;
+                
+                // Mark this player as leaving this round
+                players[playerIndex].isLeaving = true;
+            }
+            
+            // Update the UI to reflect the player's decision
+            renderPlayers();
+            
+            // Check if all active players have made decisions
+            checkAllDecisionsMade();
+        }
+        
+        // Check if round is over
+        function isRoundOver() {
+            // Round is over if all players are inactive or deck is empty
+            return players.every(player => !player.isActive) || currentDeck.length === 0;
+        }
+        
+        // End the current round
+        function endRound() {
+            // Show round summary
+            showRoundSummary();
+            
+            // Start next round after delay
+            setTimeout(() => {
+                if (currentRound < 5) {
+                    startNextRound();
+                } else {
+                    endGame();
+                }
+            }, 3000);
+        }
+        
+        // Show round summary
+        function showRoundSummary() {
+            summaryTitle.textContent = `Round ${currentRound} Complete`;
+            
+            let summaryText = '<h3>Points earned this round:</h3>';
+            
+            players.forEach(player => {
+                // Add round scores to total scores
+                player.score += player.roundScore;
+                summaryText += `<p>${player.name}: ${player.roundScore} (Total: ${player.score})</p>`;
+                // Reset round scores for next round
+                player.roundScore = 0;
+            });
+            
+            summaryText += `<p>Lot amount: ${lotAmount}</p>`;
+            
+            summaryContent.innerHTML = summaryText;
+            roundSummary.style.display = 'block';
+        }
+        
+        // Start the next round
+        function startNextRound() {
+            // Before starting new round, add current round scores to total scores for all players
+            players.forEach(player => {
+                player.score += player.roundScore;
+                player.roundScore = 0;
+            });
+            
+            // Hide round summary
+            roundSummary.style.display = 'none';
+            
+            // Increment round
+            currentRound++;
+            
+            // Reset round state
+            cardsDrawn = [];
+            eliminationCardDrawn = false;
+            waitingForDecisions = false;
+            lotAmount = 0; // Reset lot amount for new round
+            
+            // Reset all players to active
+            players.forEach(player => {
+                player.isActive = true;
+                player.hasDecided = false;
+                player.decision = null;
+                player.isLeaving = false;
+            });
+            
+            // Generate and shuffle new deck
+            const numDecks = parseInt(numDecksInput.value);
+            currentDeck = shuffleDeck(generateDecks(numDecks));
+            
+            // Clear history
+            historyCards.innerHTML = '';
+            
+            // Reset card message
+            cardMessage.textContent = '';
+            
+            // Clear current card display
+            currentCardDisplay.innerHTML = '';
+            
+            // Update UI
+            updateGameInfo();
+            renderPlayers();
+            
+            // Enable draw button
+            drawCardBtn.disabled = false;
+        }
+        
+        // End the game
+        function endGame() {
+            // Hide round summary
+            roundSummary.style.display = 'none';
+            
+            // Sort players by score in descending order
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            
+            // Find the highest score
+            const highestScore = sortedPlayers[0].score;
+            
+            // Find all players with the highest score (tie)
+            const winners = sortedPlayers.filter(player => player.score === highestScore);
+            
+            // Display final scores
+            let scoresHTML = '';
+            sortedPlayers.forEach(player => {
+                const isWinner = player.score === highestScore;
+                scoresHTML += `
+                    <div class="result-item ${isWinner ? 'winner' : ''}">
+                        ${player.name}: ${player.score} points ${isWinner ? '(Winner!)' : ''}
+                    </div>
+                `;
+            });
+            finalScores.innerHTML = scoresHTML;
+            
+            // Display winners
+            if (winners.length === 1) {
+                winners.innerHTML = `<h2>${winners[0].name} wins the game!</h2>`;
+            } else {
+                let winnersNames = winners.map(player => player.name).join(', ');
+                winners.innerHTML = `<h2>Tie game! Winners: ${winnersNames}</h2>`;
+            }
+            
+            // Display final lot amount
+            finalLot.textContent = `Final lot amount: ${lotAmount}`;
+            
+            // Show results screen
+            gameScreen.style.display = 'none';
+            resultsScreen.style.display = 'block';
+        }
+        
+        // Reset the game
+        function resetGame() {
+            // Reset game state
+            currentRound = 1;
+            currentDeck = [];
+            lotAmount = 0;
+            players = [];
+            cardsDrawn = [];
+            eliminationCardDrawn = false;
+            
+            // Clear UI
+            historyCards.innerHTML = '';
+            currentCardDisplay.innerHTML = '';
+            cardMessage.textContent = '';
+            
+            // Show setup screen
+            resultsScreen.style.display = 'none';
+            gameScreen.style.display = 'none';
+            setupScreen.style.display = 'block';
+            
+            // Reset inputs
+            numDecksInput.value = 3;
+            numPlayersInput.value = 3;
+            generatePlayerNameInputs();
+        }
+        
+        // Helper function to get suit symbol
+        function getSuitSymbol(suit) {
+            switch (suit) {
+                case 'hearts':
+                    return '♥';
+                case 'diamonds':
+                    return '♦';
+                case 'clubs':
+                    return '♣';
+                case 'spades':
+                    return '♠';
+                default:
+                    return '';
+            }
+        }
+        
+        // Initialize the game setup
+        generatePlayerNameInputs();
+        
+        // Add beforeunload event to warn about losing progress
+        window.addEventListener('beforeunload', function(e) {
+            // Only show warning if game is in progress
+            if (gameScreen.style.display === 'grid') {
+                e.preventDefault();
+                e.returnValue = 'You have a game in progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+    </script>
+</body>
+</html>
